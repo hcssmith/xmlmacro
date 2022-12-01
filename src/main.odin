@@ -58,7 +58,6 @@ main :: proc() {
   in_attr_key:= false
   in_attr:= false
   in_attr_value := false
-  ptr_current_elem: ^Element
   nesting_level := 0
   in_closing_tag := false
 
@@ -70,7 +69,7 @@ main :: proc() {
         in_tag = true
         util.d_clear_rune_buffer(&buffer)
         in_tag_name = true
-        nesting_level += 1
+        //nesting_level += 1
         break
       case '>':
         if in_tag_name {
@@ -89,7 +88,12 @@ main :: proc() {
         in_attr_value = false
         in_closing_tag = false
         util.d_clear_rune_buffer(&buffer)
-        fmt.printf("{0}\n", elem)
+        //fmt.printf("{0}\n", elem)
+        if nesting_level != 0 {
+          //x 
+        } else {
+          append(&doc.Elements, elem)
+        }
         elem = {}
         attr = {}
         break
@@ -131,6 +135,7 @@ main :: proc() {
       
     }
   }
+  fmt.printf("{0}", doc)
 }
 
 
