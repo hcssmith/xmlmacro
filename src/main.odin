@@ -6,9 +6,9 @@ import "lib/xml"
 
 main :: proc() {
   doc:=xml.parse_file("./index.xml")
-
-  fmt.printf("{0}\n", doc.XMLDeclaration)
-  fmt.printf("{0}\n", doc.Stylesheet)
+  fmt.printf(xml.print_xml_document(&doc))
+  //fmt.printf("{0}\n", doc.XMLDeclaration)
+  //fmt.printf("{0}\n", doc.Stylesheet)
   
   //for i:=0; i<len(doc.Elements);i+=1 {
   //  fmt.printf("{0}\n", doc.Elements[i])
