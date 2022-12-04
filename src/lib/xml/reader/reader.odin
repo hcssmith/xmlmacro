@@ -17,6 +17,7 @@ ElementID :: types.ElementID
 Dpctype :: types.Doctype
 StyleSheet :: types.StyleSheet
 ContentType :: types.ContentType
+XMLDeclaration :: types.XMLDeclaration
 
 // Buffer alias
 RuneBuffer :: [dynamic]rune
@@ -58,7 +59,6 @@ get_full_element_tag :: proc(s: ^scanner.Scanner, buffer: ^RuneBuffer) -> (elem:
 
 get_attrs_list :: proc(buf: ^RuneBuffer, index: int) -> (attrs: [dynamic]Attribute, selfclosing: bool) {
   abuf : RuneBuffer
-  d_attrs: [dynamic]Attribute
   i:=index
   for ;i<len(buf); i+=1 {
     if buf[i] == '/' || buf[i] == '?' {
@@ -83,7 +83,7 @@ get_attrs_list :: proc(buf: ^RuneBuffer, index: int) -> (attrs: [dynamic]Attribu
       append(&abuf, buf[i])
       i+=1
     }
-    attr.Key = util.d_runes_to_string(abuf)
+    attr.Key = strings.trim_space(util.d_runes_to_string(abuf))
     util.d_clear_buffer(&abuf)
     attr_val: for {
       if buf[i] == '"' || buf[i] == '\'' {
@@ -96,15 +96,13 @@ get_attrs_list :: proc(buf: ^RuneBuffer, index: int) -> (attrs: [dynamic]Attribu
       append(&abuf, buf[i])
       i += 1
     }
-    attr.Value = util.d_runes_to_string(abuf)
+    attr.Value = strings.trim_space(util.d_runes_to_string(abuf, 1))
     util.d_clear_buffer(&abuf)
-    append(&d_attrs, attr)
+    append(&attrs, attr)
   }
-  attrs = d_attrs
   return
 }
 
-//<elementname attr="value" attr2 = "cdscdcsd">
 get_element_name :: proc(buf: ^RuneBuffer) -> (name: string, index: int) {
   ebuf : RuneBuffer
   inName := false
@@ -136,6 +134,62 @@ get_element_copy_by_id :: proc(doc: ^XMLDocument, ID: ElementID) -> Element {
     }
   }
   return {}
+}
+
+get_elements_copy_by_parent_id :: proc(doc: ^XMLDocument, ID: ElementID) -> [dynamic]Element {
+  elist: [dynamic]Element
+  for x:=0;x<len(doc.Elements); x+=1 {
+    if doc.Elements[x].Parent == ID {
+      append(&elist, doc.Elements[x])
+    }
+  }
+  return elist
+
+}
+parse_xml_stylesheet :: proc(xml: Element) ->  (stylesheet: StyleSheet) {
+  stylesheet.Type = .empty
+  stylesheet.Href = ""
+  for i:=0;i<len(xml.Attributes); i+=1 {
+    switch xml.Attributes[i].Key {
+      case "type":
+        switch xml.Attributes[i].Value {
+          case "text/css":
+            stylesheet.Type = .css
+            break
+          case "text/xsl":
+            stylesheet.Type = .xsl
+            break
+          case "":
+            stylesheet.Type = .empty
+            break
+          }
+        break
+      case "href":
+        stylesheet.Href = xml.Attributes[i].Value
+        break
+    }
+  }
+  return
+}
+
+parse_xml_declaration :: proc(xml: Element) ->  (dec: XMLDeclaration) {
+  dec.Version = "1.0"
+  dec.Encoding = "UTF-8"
+  dec.Standalone = "no"
+  for i:=0;i<len(xml.Attributes); i+=1 {
+    switch xml.Attributes[i].Key {
+      case "version":
+        dec.Version = xml.Attributes[i].Value
+        break
+      case "encoding":
+        dec.Encoding = xml.Attributes[i].Value
+        break
+      case "standalone":
+        dec.Standalone = xml.Attributes[i].Value
+        break
+    }
+  }
+  return
 }
 
 parse_file :: proc(filename: string) -> (document: XMLDocument) {
@@ -193,6 +247,16 @@ parse_file :: proc(filename: string) -> (document: XMLDocument) {
         break
       case:
         append(&textBuf, ch)
+    }
+  }
+  root_elements := get_elements_copy_by_parent_id(&document, 0)
+  for a:=0;a<len(root_elements);a+=1 {
+    switch root_elements[a].TagName {
+      case "?xml":
+        document.XMLDeclaration = parse_xml_declaration(root_elements[a])
+        break
+      case "?xml-stylesheet":
+        document.Stylesheet = parse_xml_stylesheet(root_elements[a])
     }
   }
   return

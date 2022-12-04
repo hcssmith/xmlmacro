@@ -3,7 +3,6 @@ package util
 import "core:unicode/utf8"
 import "../xml/types"
 
-import "core:fmt"
 
 u64_stack :: struct {
   arr: [dynamic]u64,
@@ -59,44 +58,35 @@ init_u64_stack :: proc(stack: ^u64_stack) {
 }
 
 u64_push :: proc(stack: ^u64_stack, item: u64) {
-  fmt.printf("push: {0}\n", item)
   l := len(stack.arr)
   if l == 0 {
     append(&stack.arr, item)
     stack.ptr = 0
   } else if l-1 != stack.ptr{
-    fmt.printf("{0}\n{1}\n{2}", l, stack, item)
     stack.arr[stack.ptr+1] = item
     stack.ptr = stack.ptr + 1
   } else {
-    fmt.printf("c")
     append(&stack.arr, item)
     stack.ptr = stack.ptr + 1
   }
 }
 
 u64_pop :: proc(stack: ^u64_stack) -> u64 {
-  fmt.printf("pop: ")
   if len(stack.arr) == 0 {
-    fmt.printf("0\n")
     return 0
   } 
   else {
     p := stack.ptr
     stack.ptr = stack.ptr - 1
-    fmt.printf("{0}\n", stack.arr[p])
     return stack.arr[p]
   }
 }
 
 u64_skim :: proc(stack: ^u64_stack) -> u64 {
-  fmt.printf("skim:")
   if len(stack.arr) == 0 {
-    fmt.printf("0\n")
     return 0
   } 
   if len(stack.arr) > 0 {
-    fmt.printf("{0}\n", stack.arr[stack.ptr])
     return stack.arr[stack.ptr]
   }
   return 0

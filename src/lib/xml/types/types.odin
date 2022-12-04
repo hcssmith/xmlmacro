@@ -4,8 +4,7 @@ XMLDocument :: struct {
   Doctype: Doctype,
   CurrentElementID: ElementID,
   Stylesheet: StyleSheet,
-  Version: string,
-  Encoding: string,
+  XMLDeclaration: XMLDeclaration,
   Elements: [dynamic]Element,
 }
 
@@ -28,6 +27,12 @@ Element :: struct {
 
 ElementID :: u64
 
+XMLDeclaration :: struct {
+  Version: string,
+  Encoding: string,
+  Standalone: string,
+}
+
 Doctype :: struct {
   Public: string,
   Private: string,
@@ -40,4 +45,6 @@ StyleSheet :: struct {
 
 ContentType :: enum {
   xsl,
+  css,
+  empty,
 }
