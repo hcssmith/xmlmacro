@@ -7,8 +7,6 @@ import "core:text/scanner"
 import "core:os"
 import "core:strings"
 
-import "core:fmt"
-
 // Types shorthand
 XMLDocument :: types.XMLDocument
 Attribute :: types.Attribute
