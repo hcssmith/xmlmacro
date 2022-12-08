@@ -55,7 +55,7 @@ TokensiedQuery :: [dynamic]QueryToken
 
 buf_to_token :: proc(tq: ^TokensiedQuery, buf: ^[dynamic]rune) {
   s:=util.d_runes_to_string(buf^)
-  fmt.printf("buf_to_token()=>{0}\n", s)
+  //fmt.printf("buf_to_token()=>{0}\n", s)
   util.d_clear_buffer(buf)
   switch s {
     case "":
@@ -193,7 +193,7 @@ parse_query :: proc(query: string) -> TokensiedQuery {
   }
   return tokensiedQuery
 }
-// "/node/test"
+
 run_query :: proc(doc: ^XMLDocument, xpath: string, current_node: CurrentNode) -> Result
 {
   tokensiedQuery:=parse_query(xpath)
@@ -210,16 +210,34 @@ run_query :: proc(doc: ^XMLDocument, xpath: string, current_node: CurrentNode) -
           case .Root:
             if x == 0 {
               list_of_elements = get_elem_id_list_by_parent_id(doc^, 0)
-            } else {
-
             }
+            break
+          case .All:
+          case .Current:
+          case .Parent:
+          case .Attr:
+          case .AnyE:
+          case .And:
+          case .AnyA:
+          case .Node:
+          case .Start:
+          case .Last:
+          case .Plus:
+          case .Minus:
+          case .Position:
+          case .Eq:
+          case .MoreThan:
+          case .LessThan:
+          case .End:
+          case:
             break
         }
         break
     }
   }
+  r:Result
+  return r
 }
-
 
 // QueryEnum :: enum {
 //   Root,

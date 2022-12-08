@@ -19,3 +19,14 @@ get_elem_by_name_from_elem_list :: proc(doc:XMLDocument, elist:[dynamic]ElementI
     }
     return
 }
+
+get_ptr_list_from_elemnt_ids :: proc(doc:^XMLDocument, elist:[dynamic]ElementID) -> (result: [dynamic]^Element) {
+    for x:=0;x<len(doc.Elements);x+=1 {
+        for y:=0;y<len(elist);y+=1 {
+            if doc.Elements[x].ID == elist[y] {
+                append(&result, &doc.Elements[x])
+            }
+        }
+    }
+    return
+}
