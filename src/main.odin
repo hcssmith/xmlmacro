@@ -9,7 +9,7 @@ main :: proc() {
   doc:=xml.parse_file("./index.xml")
   //fmt.printf(xml.print_xml_document(&doc))
 
-  xpath.run_query(&doc, "//include@type", 0)
+  xpath.run_query(&doc, "//include/in[last()-1]/element[@lang='en']", 0)
 
   //fmt.printf("{0}\n", doc.XMLDeclaration)
   //fmt.printf("{0}\n", doc.Stylesheet)
