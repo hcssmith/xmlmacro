@@ -7,14 +7,14 @@ import "../reader"
 import "core:text/scanner"
 import "core:fmt"
 
-XMLDeclaration :: types.XMLDeclaration
-ContentType :: types.ContentType
-StyleSheet :: types.StyleSheet
-XMLDocument :: types.XMLDocument
-Element :: types.Element
-ElementID :: types.ElementID
-Doctype :: types.Doctype
-Attribute :: types.Attribute
+XMLDeclaration  :: types.XMLDeclaration
+ContentType     :: types.ContentType
+StyleSheet      :: types.StyleSheet
+XMLDocument     :: types.XMLDocument
+Element         :: types.Element
+ElementID       :: types.ElementID
+Doctype         :: types.Doctype
+Attribute       :: types.Attribute
 
 CurrentNode :: ElementID
 
@@ -235,27 +235,5 @@ run_query :: proc(doc: ^XMLDocument, xpath: string, current_node: CurrentNode) -
         break
     }
   }
-  r:Result
-  return r
+  return get_ptr_list_from_elemnt_ids(doc, list_of_elements)
 }
-
-// QueryEnum :: enum {
-//   Root,
-//   All,
-//   Current,
-//   Parent,
-//   Attr,
-//   AnyE,
-//   And,
-//   AnyA,
-//   Node,
-//   Start,
-//   Last,
-//   Plus,
-//   Minus,
-//   Position,
-//   Eq,
-//   MoreThan,
-//   LessThan,
-//   End,
-// }
