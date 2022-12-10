@@ -7,7 +7,11 @@ import "lib/xml/xpath"
 
 main :: proc() {
   doc:=xml.parse_file("./index.xml")
-  xpath.run_query(&doc, "//include/in[last()-1]/element[@lang='en']", 0)
+  //a := xpath.run_query(&doc, "/page/includes/include", 0)
+
+  ast := xpath.parse_to_ast("count(//a)")
+
+  fmt.printf("{0}", ast)
 }
 
 
