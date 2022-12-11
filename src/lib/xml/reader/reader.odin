@@ -10,6 +10,7 @@ import "core:strings"
 // Types shorthand
 XMLDocument :: types.XMLDocument
 Attribute :: types.Attribute
+AttributeID :: types.AttributeID
 Element :: types.Element
 ElementID :: types.ElementID
 Dpctype :: types.Doctype
@@ -31,7 +32,7 @@ get_file :: proc(file: string) -> (contents: string, status: bool) {
   return
 }
 
-get_full_element_tag :: proc(s: ^scanner.Scanner, buffer: ^RuneBuffer) -> (elem: Element) {
+get_full_element_tag :: proc(s: ^scanner.Scanner, buffer: ^RuneBuffer, doc: ^XMLDocument) -> (elem: Element) {
   
   element_loop: for {
     ch := scanner.next(s)
@@ -49,7 +50,13 @@ get_full_element_tag :: proc(s: ^scanner.Scanner, buffer: ^RuneBuffer) -> (elem:
   }
   attrs, selfclosing := get_attrs_list(buffer, i)
   elem.TagName = e
-  elem.Attributes = attrs
+  for x:=0;x<len(attrs);x+=1 {
+    a:=attrs[x]
+    a.ID = doc.CurrentAttributeID
+    doc.CurrentAttributeID +=1
+    append(&doc.Attributes, a)
+    append(&elem.Attributes, a.ID)
+  }
   elem.SelfClosing = selfclosing
   util.d_clear_buffer(buffer)
   return
@@ -134,6 +141,15 @@ get_element_copy_by_id :: proc(doc: ^XMLDocument, ID: ElementID) -> Element {
   return {}
 }
 
+get_attr_copy_by_id :: proc(doc: XMLDocument, ID: AttributeID) -> Attribute {
+  for x:=0;x<len(doc.Attributes);x+=1 {
+    if doc.Attributes[x].ID == ID {
+      return doc.Attributes[x]
+    }
+  }
+  return {}
+}
+
 get_elements_copy_by_parent_id :: proc(doc: ^XMLDocument, ID: ElementID) -> [dynamic]Element {
   elist: [dynamic]Element
   for x:=0;x<len(doc.Elements); x+=1 {
@@ -142,15 +158,15 @@ get_elements_copy_by_parent_id :: proc(doc: ^XMLDocument, ID: ElementID) -> [dyn
     }
   }
   return elist
-
 }
-parse_xml_stylesheet :: proc(xml: Element) ->  (stylesheet: StyleSheet) {
+parse_xml_stylesheet :: proc(xml: Element, doc: XMLDocument) ->  (stylesheet: StyleSheet) {
   stylesheet.Type = .empty
   stylesheet.Href = ""
   for i:=0;i<len(xml.Attributes); i+=1 {
-    switch xml.Attributes[i].Key {
+    attr := get_attr_copy_by_id(doc, xml.Attributes[i])
+    switch attr.Key {
       case "type":
-        switch xml.Attributes[i].Value {
+        switch attr.Value {
           case "text/css":
             stylesheet.Type = .css
             break
@@ -163,27 +179,28 @@ parse_xml_stylesheet :: proc(xml: Element) ->  (stylesheet: StyleSheet) {
           }
         break
       case "href":
-        stylesheet.Href = xml.Attributes[i].Value
+        stylesheet.Href = attr.Value
         break
     }
   }
   return
 }
 
-parse_xml_declaration :: proc(xml: Element) ->  (dec: XMLDeclaration) {
+parse_xml_declaration :: proc(xml: Element, doc: XMLDocument) ->  (dec: XMLDeclaration) {
   dec.Version = "1.0"
   dec.Encoding = "UTF-8"
   dec.Standalone = "no"
   for i:=0;i<len(xml.Attributes); i+=1 {
-    switch xml.Attributes[i].Key {
+    attr := get_attr_copy_by_id(doc, xml.Attributes[i])
+    switch attr.Key {
       case "version":
-        dec.Version = xml.Attributes[i].Value
+        dec.Version = attr.Value
         break
       case "encoding":
-        dec.Encoding = xml.Attributes[i].Value
+        dec.Encoding = attr.Value
         break
       case "standalone":
-        dec.Standalone = xml.Attributes[i].Value
+        dec.Standalone = attr.Value
         break
     }
   }
@@ -199,8 +216,8 @@ parse_file :: proc(filename: string) -> (document: XMLDocument) {
   scanner.init(&s, contents)
   buf: RuneBuffer
   textBuf: RuneBuffer
-  elemStack: util.u64_stack
-  util.init_u64_stack(&elemStack)
+  elemStack: ElementID_stack
+  init_ElementID_stack(&elemStack)
   main_scan_loop: for {
     ch := scanner.next(&s)
     if ch != scanner.EOF {
@@ -217,18 +234,18 @@ parse_file :: proc(filename: string) -> (document: XMLDocument) {
         if t.Text != "" {
           t.ID = document.CurrentElementID
           document.CurrentElementID += 1
-          t.Parent = util.u64_skim(&elemStack)
+          t.Parent = ElementID_skim(&elemStack)
           append(&document.Elements, t)
         }
         util.d_clear_buffer(&textBuf)
         util.d_clear_buffer(&buf)
-        e: Element = get_full_element_tag(&s, &buf)
+        e: Element = get_full_element_tag(&s, &buf, &document)
         if !e.Closer {
           e.ID = document.CurrentElementID
-          e.Parent = util.u64_skim(&elemStack)
+          e.Parent = ElementID_skim(&elemStack)
           document.CurrentElementID += 1
         } else {
-          i := util.u64_pop(&elemStack)
+          i := ElementID_pop(&elemStack)
           e2 := get_element_copy_by_id(&document, i)
           if e2.TagName != e.TagName {
             break main_scan_loop
@@ -236,7 +253,7 @@ parse_file :: proc(filename: string) -> (document: XMLDocument) {
         }
         if !e.SelfClosing {
           if !e.Closer {
-          util.u64_push(&elemStack,e.ID)
+            ElementID_push(&elemStack,e.ID)
         }
         }
         if !e.Closer {
@@ -251,10 +268,10 @@ parse_file :: proc(filename: string) -> (document: XMLDocument) {
   for a:=0;a<len(root_elements);a+=1 {
     switch root_elements[a].TagName {
       case "?xml":
-        document.XMLDeclaration = parse_xml_declaration(root_elements[a])
+        document.XMLDeclaration = parse_xml_declaration(root_elements[a], document)
         break
       case "?xml-stylesheet":
-        document.Stylesheet = parse_xml_stylesheet(root_elements[a])
+        document.Stylesheet = parse_xml_stylesheet(root_elements[a], document)
     }
   }
   return

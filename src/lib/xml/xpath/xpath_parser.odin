@@ -229,5 +229,9 @@ parse_to_ast :: proc(xapth_query: string) -> (root: AST) {
         }
         append(&buf, ch)
     }
+    if root.IsBrancher {
+        append(&root.Branch, root.Exp)
+        root.Exp = {}
+    }
     return
 }

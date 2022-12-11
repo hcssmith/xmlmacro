@@ -58,7 +58,8 @@ print_element :: proc(sb: ^strings.Builder, e: Element, doc: ^XMLDocument) {
   fmt.sbprintf(sb, "<")
   fmt.sbprintf(sb, "{0} ", e.TagName)
   for x:=0; x<len(e.Attributes);x+=1 {
-    fmt.sbprintf(sb, "{0}=\"{1}\" ", e.Attributes[x].Key, e.Attributes[x].Value)
+    attr := reader.get_attr_copy_by_id(doc^, e.Attributes[x])
+    fmt.sbprintf(sb, "{0}=\"{1}\" ", attr.Key, attr.Value)
   }
   if e.SelfClosing {
     fmt.sbprintf(sb, " />\n")
