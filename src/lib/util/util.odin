@@ -4,10 +4,7 @@ import "core:unicode/utf8"
 import "../xml/types"
 
 
-u64_stack :: struct {
-  arr: [dynamic]u64,
-  ptr: int,
-}
+
 
 d_runes_to_string :: proc(dynamic_runes: [dynamic]rune, index: int = 0, end: int = 0) -> string {
   end := end
@@ -48,46 +45,4 @@ d_clear_buffer :: proc{
   d_clear_u64_buffer,
   d_clear_rune_buffer,
   d_clear_int_buffer, 
-}
-
-init_u64_stack :: proc(stack: ^u64_stack) {
-  stack^ = {
-    [dynamic]u64{},
-    0,
-  }
-}
-
-u64_push :: proc(stack: ^u64_stack, item: u64) {
-  l := len(stack.arr)
-  if l == 0 {
-    append(&stack.arr, item)
-    stack.ptr = 0
-  } else if l-1 != stack.ptr{
-    stack.arr[stack.ptr+1] = item
-    stack.ptr = stack.ptr + 1
-  } else {
-    append(&stack.arr, item)
-    stack.ptr = stack.ptr + 1
-  }
-}
-
-u64_pop :: proc(stack: ^u64_stack) -> u64 {
-  if len(stack.arr) == 0 {
-    return 0
-  } 
-  else {
-    p := stack.ptr
-    stack.ptr = stack.ptr - 1
-    return stack.arr[p]
-  }
-}
-
-u64_skim :: proc(stack: ^u64_stack) -> u64 {
-  if len(stack.arr) == 0 {
-    return 0
-  } 
-  if len(stack.arr) > 0 {
-    return stack.arr[stack.ptr]
-  }
-  return 0
 }
